@@ -1,0 +1,27 @@
+services:   # définition des services Docker, c'est-à-dire les conteneurs à lancer.
+  mongo:  # Définition du service MongoDB
+    image: mongo:7.0  # Image Docker officielle de MongoDB version 7.0
+    container_name: proj5_mongo  # Nom du conteneur pour le reconnaître facilement
+    ports:
+      - "27018:27017"  # Redirige le port 27017 du conteneur vers le port 27018 de la machine hôte
+                        # Permet de se connecter à MongoDB depuis l'extérieur, par ex. MongoDB Compass
+    volumes:
+      - projet_5_mongo_data:/data/db  # Persistance des données : monte le volume nommé projet_5_mongo_data dans /data/db
+                               # Même si le conteneur est supprimé, les données restent. stockage des données de MongoDB dans /data/db
+
+  migration:  # Définition du service qui fait la migration/import des données
+    build:    #image personnalisée pour la migration
+      context: .  # Le chemin du projet Docker pour construire l'image
+      dockerfile: Dockerfile.migration  # Dockerfile spécifique pour la migration
+    container_name: proj5_migration  # Nom du conteneur de migration
+    depends_on:
+      - mongo  # Indique que ce conteneur doit attendre que mongo soit démarré avant lui
+    volumes:
+      - ./data:/data:ro  # Monte le dossier local ./data dans /data du conteneur en lecture seule (:ro)
+                           # Sert pour importer le CSV dans le conteneur
+      - ./src:/app/src:ro  # Monte le dossier source local dans le conteneur pour debug en lecture seule (:ro)
+    # restart: "no"  # (optionnel) migration est un job one-shot, donc pas besoin de redémarrage automatique
+    # Le CMD du Dockerfile lance automatiquement la migration puis termine le conteneur
+
+volumes:
+  projet_5_mongo_data:  # Définition du volume Docker nommé projet_5_mongo_data pour la persistance des données MongoDB, reference dans services.mongo.volumes

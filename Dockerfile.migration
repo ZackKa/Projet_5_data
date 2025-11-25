@@ -1,0 +1,41 @@
+# 1. Image de base : Python 3.13 slim
+# On part de l'image officielle Python 3.13 "slim" (allégée, sans outils inutiles)
+# Chaque conteneur a sa propre version de Python, indépendante de celle de ton PC.
+FROM python:3.13-slim
+
+# 2. Définir le répertoire de travail
+# Toutes les commandes suivantes s'exécuteront depuis /app à l'intérieur du conteneur.
+# Ce dossier n'existe que dans le conteneur.
+WORKDIR /app
+
+# 3. Copier le fichier de dépendances Python
+# Copy depuis le dossier courant sur ton PC vers /app dans le conteneur.
+# requirements.txt liste tous les paquets Python nécessaires.
+COPY requirements.txt /app/requirements.txt
+
+# 4. Installer les dépendances Python
+# 'pip install' installe tous les paquets listés dans requirements.txt.
+# '--no-cache-dir' empêche pip de stocker des fichiers temporaires pour réduire la taille de l'image.
+# '-r' signifie "read" (lire) le fichier requirements.txt et installer les dépendances.
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# 5. Copier le code source
+# Tout le dossier src (contenant tes scripts Python) est copié dans /app/src/ dans le conteneur.
+COPY src/ /app/src/
+
+# 6. Copier le script wait_for_mongo
+# Ce script permet de vérifier que MongoDB est prêt avant d'exécuter la migration.
+COPY wait_for_mongo.py /app/wait_for_mongo.py
+
+# 7. Commande par défaut à l'exécution du conteneur
+# CMD lance cette commande automatiquement quand le conteneur démarre.
+# "bash -lc" : lance un shell bash en mode login (-l) et exécute la commande qui suit (-c), ce qui permet de charger les variables d'environnement correctement.
+# Ici, on fait deux choses en séquence :
+#   1. lance le script wait_for_mongo.py qui attend que MongoDB soit accessible (host=mongo, port=27017, timeout=60s)
+#   (&& : Exécute la commande suivante seulement si la première réussit sans erreur)
+#   2. lance le script import_csv_to_mongo.py qui importe les données du CSV vers MongoDB
+#   "--csv /data/healthcare_dataset.csv     : chemin du fichier CSV à importer",
+#   "--mongo-uri mongodb://mongo:27017      : URI MongoDB à utiliser",
+#   "--db medical_db                         : base de données à utiliser",
+#   "--collection patients                   : collection à utiliser".
+CMD ["bash", "-lc", "python /app/wait_for_mongo.py --host mongo --port 27017 --timeout 60 && python /app/src/import_csv_to_mongo.py --csv /data/healthcare_dataset.csv --mongo-uri mongodb://mongo:27017 --db medical_db --collection patients"]

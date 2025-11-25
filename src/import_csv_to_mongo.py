@@ -4,11 +4,11 @@ from pymongo import MongoClient
 # 1. Charger le CSV (séparateur = ;)
 # pd.read_csv lit le fichier CSV et le transforme en DataFrame pandas
 # sep=";" indique que le séparateur de colonnes est le point-virgule
-dataHealthcare = pd.read_csv("../data/healthcare_dataset.csv", sep=";")
+dataHealthcare = pd.read_csv("/data/healthcare_dataset.csv", sep=";")
 
 # 2. Connexion à MongoDB local
 # MongoClient crée la connexion au serveur MongoDB qui tourne sur localhost, port 27017
-client = MongoClient("mongodb://localhost:27017/")
+client = MongoClient("mongodb://mongo:27017/")
 db = client["medical_db"]           # sélectionne ou crée la base de données 'medical_db'
 collection = db["patients"]         # sélectionne ou crée la collection 'patients'
 
