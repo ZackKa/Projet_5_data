@@ -5,14 +5,28 @@
 Ce projet a été réalisé dans le cadre d’une mission interne pour DataSoluTech, visant à accompagner un client dans la modernisation de son architecture data.
 L’objectif est d’aider un client à améliorer la scalabilité de son système de gestion de données médicales en migrant son dataset vers une base de données MongoDB, plus adaptée pour des volumes importants.
 
-Ce projet inclut :  
+1- Migrer le dataset du client vers une base de données MongoDB locale
+ça inclut :  
 - L'analyse et la validation du dataset  
-- La migration automatisée vers MongoDB  
+- La migration vers MongoDB, adaptée aux gros volumes
 - La mise en place d’opérations CRUD  
 - La création d’index pour optimiser les performances 
 
+2- Automatiser la migration des données grâce à des scripts Python pour la validation, l’insertion et la manipulation, tout en conteneurisant MongoDB et les scripts via Docker afin de disposer d’une infrastructure portable, reproductible et scalable, facilitant les futurs déploiements sur le cloud.
+ça inclut : 
+- automatisé cette migration via un script Python,
+- conteneurisé MongoDB et le script via Docker,
+- mis en place une structure reproductible, portable et facilement déployable
+
+Le projet se compose donc de deux étapes principales :
+
+Étape 1 : Migration classique et manipulation locale via MongoDB et CSV.
+Étape 2 : Migration automatisée via Docker avec conteneurs pour MongoDB et scripts de migration.
+
 ## 2. Structure du projet
 
+Etape 1 :
+```
 Projet_5_data/
 │
 ├── data/
@@ -24,17 +38,37 @@ Projet_5_data/
 │   ├── crud_examples.py
 │   └── create_indexes.py
 │
-├── tests/
-│   └── (vide pour le moment)
 │
 ├── requirements.txt
 └── README.md
+```
+Etapes 2 :
+```
+Projet_5_data/
+│
+├── data/
+│   └── healthcare_dataset.csv
+│
+├── src/
+│   ├── import_csv_to_mongo.py
+│   ├── validate_data.py
+│   ├── crud_examples.py
+│   └── create_indexes.py
+│
+│
+├── requirements.txt
+├── docker-compose.yml
+├── Dockerfile.migration
+├── .dockerignore
+└── README.md
+```
 
+## Étape 1 – Migration classique et manipulation locale
 
 ## 3. Pré-requis techniques
 
 - **Python 3.13.5**  
-- **MongoDB** + MongoDB Compass  
+- **MongoDB Compass**  
 
 MongoDB local tourne sur :  
 
@@ -96,6 +130,8 @@ python src/validate_data.py
 
 ## 6. Migration dans MongoDB (`import_csv_to_mongo.py`)
 
+Pour la partie 1 , remplacer ` dataHealthcare = pd.read_csv("/data/healthcare_dataset.csv", sep=";") ` par `dataHealthcare = pd.read_csv("../data/healthcare_dataset.csv", sep=";")` et `client = MongoClient("mongodb://mongo:27017/")` par `client = MongoClient("mongodb://localhost:27017/")` dans le fichier `import_csv_to_mongo.py`
+
 Base de données : ensemble logique des collections
 Collection : équivalent d’une table, mais sans schéma strict
 Document : unité de données au format JSON/BSON
@@ -114,8 +150,43 @@ python src/import_csv_to_mongo.py
 
 Après exécution, MongoDB Compass montre bien 55 500 documents insérés.
 
+## 7. Les Données
 
-## 7. Modèle de données dans MongoDB
+7.1. Schéma de la base de données
+
+MongoDB étant un système NoSQL orienté documents, le schéma n’est pas imposé comme dans une base relationnelle.
+Cependant, pour faciliter la compréhension et la maintenance, voici le schéma logique utilisé dans ce projet.
+
+```
+medical_db
+│
+└── patients (55 500 documents)
+    │
+    ├── _id : ObjectId
+    ├── Name : String
+    ├── Age : Int32
+    ├── Gender : String
+    ├── Blood Type : String
+    ├── Medical Condition : String
+    ├── Date of Admission : String
+    ├── Doctor : String
+    ├── Hospital : String
+    ├── Insurance Provider : String
+    ├── Billing Amount : Double
+    ├── Room Number : Int32
+    ├── Admission Type : String
+    ├── Discharge Date : String
+    ├── Medication : String
+    └── Test Results : String
+
+Indexes:
+  - Name (1)
+  - Medical Condition (1)
+  - Doctor (1)
+  - Date of Admission (1)
+```
+
+## 7.2 Modèle de données dans MongoDB
 
 MongoDB est un système NoSQL orienté documents.
 
@@ -194,13 +265,10 @@ Pour améliorer les performances de recherche, plusieurs index ont été ajouté
 - **Blood Type** : faible cardinalité (8 valeurs seulement) → index inutile  
 - **Gender** : seulement 2 valeurs → index inutile  
 
-> Les index choisis répondent donc aux vraies requêtes métier.
-
 ### Lancer les index
 ```bash
 python src/create_indexes.py
 ```
-
 
 ## 10. requirements.txt
 
@@ -211,13 +279,107 @@ pandas==2.2.3
 pymongo==4.15.4
 ```
 
-## 11. Conclusion
+## Conclusion Étape 1
 
 Cette première étape fournit au client une base solide pour moderniser la gestion de ses données, en assurant une migration fiable, contrôlée et extensible vers un système NoSQL.
 Les travaux réalisés ont permis de : 
 - mettre en place une base de données NoSQL adaptée au volume des données du client,
 - utiliser MongoDB via des scripts Python pour charger et manipuler les données,
-- automatiser la migration complète à partir du fichier CSV fourni,
+- la migration complète à partir du fichier CSV fourni,
 - vérifier, nettoyer et préparer les données avant leur insertion,
 - réaliser des opérations CRUD simples sur la base,
 - améliorer la vitesse de recherche en ajoutant des index adaptés.
+
+## Étape 2 – Migration automatisée via Docker
+
+## 11. Pré-requis Docker
+
+Docker Desktop
+
+MongoDB tourne dans Docker sur :
+```text
+mongodb://localhost:27018
+```
+
+## 12. Conteneurisation Docker
+
+## 12.1 docker-compose.yml
+
+Conteneur MongoDB
+
+Conteneur de migration automatique
+
+Volume persistant
+
+Réseau dédié
+
+MongoDB écoute sur le port 27018 pour éviter les conflits locaux.
+
+## 12.2 Dockerfile.migration
+
+installe Python
+
+Installation des dépendances
+
+Lancement automatique du script import_csv_to_mongo.py
+
+## 12.3 Démarrer Docker
+
+Construire et démarrer les conteneurs depuis zéro
+```bash
+docker-compose up --build -d
+```
+
+Arrêter les conteneurs
+```bash
+docker-compose down
+```
+
+Démarrer l’infrastructure Docker
+```bash
+docker-compose up -d
+```
+
+## 12.4 Commandes Docker utiles
+
+Vérifier que les conteneurs tournent
+```bash
+docker ps -a
+```
+
+Recréer depuis zéro :
+```bash
+docker-compose down -v
+docker-compose up --build -d
+```
+
+Voir les volumes :
+```bash
+docker volume ls
+```
+
+Inspecter un volume en particulier :
+```bash
+docker volume inspect projet_5_mongo_data
+```
+
+Entrer dans MongoDB via Docker :
+```bash
+docker exec -it proj5_mongo mongosh
+```
+
+## Conclusion – Étape 2 : Migration via Docker
+
+La deuxième étape du projet démontre que la migration vers MongoDB peut être automatisée et conteneurisée, offrant plusieurs avantages :
+
+- Portabilité : l’infrastructure Docker permet de lancer MongoDB et les scripts de migration sur n’importe quelle machine sans configuration complexe.
+
+- Reproductibilité : la même procédure Docker garantit que la base de données et la migration se comportent de manière identique sur différents environnements.
+
+- Scalabilité : MongoDB tourne dans un conteneur dédié, avec volume persistant pour gérer de grands volumes de données.
+
+- Simplicité d’usage : un utilisateur peut construire, démarrer, inspecter et interagir avec la base MongoDB grâce à quelques commandes Docker.
+
+- Intégration avec MongoDB Compass : la base peut être facilement explorée et vérifiée via l’interface graphique.
+
+Cette étape montre ainsi comment transformer une migration locale en processus automatisé, fiable et prêt pour le déploiement cloud.

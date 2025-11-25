@@ -8,6 +8,8 @@ services:   # définition des services Docker, c'est-à-dire les conteneurs à l
     volumes:
       - projet_5_mongo_data:/data/db  # Persistance des données : monte le volume nommé projet_5_mongo_data dans /data/db
                                # Même si le conteneur est supprimé, les données restent. stockage des données de MongoDB dans /data/db
+    networks:
+      - projet5_network
 
   migration:  # Définition du service qui fait la migration/import des données
     build:    #image personnalisée pour la migration
@@ -22,6 +24,12 @@ services:   # définition des services Docker, c'est-à-dire les conteneurs à l
       - ./src:/app/src:ro  # Monte le dossier source local dans le conteneur pour debug en lecture seule (:ro)
     # restart: "no"  # (optionnel) migration est un job one-shot, donc pas besoin de redémarrage automatique
     # Le CMD du Dockerfile lance automatiquement la migration puis termine le conteneur
+    networks:
+      - projet5_network
 
 volumes:
   projet_5_mongo_data:  # Définition du volume Docker nommé projet_5_mongo_data pour la persistance des données MongoDB, reference dans services.mongo.volumes
+
+networks:
+  projet5_network:
+    name: projet5_network
