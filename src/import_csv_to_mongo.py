@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from pymongo import MongoClient
 
 # 1. Charger le CSV (séparateur = ;)
@@ -7,8 +8,12 @@ from pymongo import MongoClient
 dataHealthcare = pd.read_csv("/data/healthcare_dataset.csv", sep=";")
 
 # 2. Connexion à MongoDB local
-# MongoClient crée la connexion au serveur MongoDB qui tourne sur localhost, port 27017
-client = MongoClient("mongodb://mongo:27017/")
+MONGO_USER = os.getenv("MONGO_USERNAME") # récupère l'utilisateur RW depuis l'environnement
+MONGO_PWD = os.getenv("MONGO_PASSWORD") # récupère le mot de passe RW depuis l'environnement
+
+# MongoClient se connecte au serveur MongoDB sur mongo:27017
+# authSource=admin indique que l'authentification se fait sur la base admin et necessaire pour l'authentification MongoDB
+client = MongoClient(f"mongodb://{MONGO_USER}:{MONGO_PWD}@mongo:27017/medical_db?authSource=admin")# URI MongoDB à utiliser
 db = client["medical_db"]           # sélectionne ou crée la base de données 'medical_db'
 collection = db["patients"]         # sélectionne ou crée la collection 'patients'
 
@@ -23,5 +28,5 @@ result = collection.insert_many(records)
 
 # 5. Affichage du résultat
 # result.inserted_ids contient la liste des identifiants (_id) générés pour chaque document
-# len(result.inserted_ids) donne le nombre total de documents insérés
+# len(result.inserted_ids) donne le nombre total de documents insérés et f pour indiquer que c'est un string
 print(f"{len(result.inserted_ids)} documents insérés dans MongoDB.")

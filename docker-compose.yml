@@ -5,9 +5,20 @@ services:   # définition des services Docker, c'est-à-dire les conteneurs à l
     ports:
       - "27018:27017"  # Redirige le port 27017 du conteneur vers le port 27018 de la machine hôte
                         # Permet de se connecter à MongoDB depuis l'extérieur, par ex. MongoDB Compass
+    environment: # Variables d'environnement pour configurer MongoDB et les utilisateurs
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME} # obligatoires pour activer l’authentification MongoDB
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD} # obligatoires pour activer l’authentification MongoDB
+      MONGO_USER_ADMIN: ${MONGO_USER_ADMIN} # Utilisateur admin pour la gestion des bases et utilisateurs
+      MONGO_USER_ADMIN_PWD: ${MONGO_USER_ADMIN_PWD} # Mot de passe de l'utilisateur admin
+      MONGO_USER_RW: ${MONGO_USER_RW} # Utilisateur read-write pour l'application
+      MONGO_USER_RW_PWD: ${MONGO_USER_RW_PWD} # Mot de passe de l'utilisateur read-write
+      MONGO_USER_READ: ${MONGO_USER_READ} # Utilisateur read pour les requêtes d'analyse
+      MONGO_USER_READ_PWD: ${MONGO_USER_READ_PWD} # Mot de passe de l'utilisateur read
     volumes:
       - projet_5_mongo_data:/data/db  # Persistance des données : monte le volume nommé projet_5_mongo_data dans /data/db
-                               # Même si le conteneur est supprimé, les données restent. stockage des données de MongoDB dans /data/db
+                                      # Même si le conteneur est supprimé, les données restent. stockage des données de MongoDB dans /data/db
+      - ./init:/docker-entrypoint-initdb.d # Monte le dossier init dans /docker-entrypoint-initdb.d du conteneur pour exécuter le script init.js, 
+                                           #MongoDB exécute automatiquement tout fichier présent dans ce dossier au 1er démarrage
     networks:
       - projet5_network
 
@@ -18,6 +29,9 @@ services:   # définition des services Docker, c'est-à-dire les conteneurs à l
     container_name: proj5_migration  # Nom du conteneur de migration
     depends_on:
       - mongo  # Indique que ce conteneur doit attendre que mongo soit démarré avant lui
+    environment: # Variables pour se connecter à MongoDB depuis la migration
+      MONGO_USERNAME: ${MONGO_USER_RW} # Nom d'utilisateur pour la connexion à MongoDB
+      MONGO_PASSWORD: ${MONGO_USER_RW_PWD} # Mot de passe pour la connexion à MongoDB
     volumes:
       - ./data:/data:ro  # Monte le dossier local ./data dans /data du conteneur en lecture seule (:ro)
                            # Sert pour importer le CSV dans le conteneur
