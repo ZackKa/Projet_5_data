@@ -41,7 +41,7 @@ services:   # définition des services Docker, c'est-à-dire les conteneurs à l
     networks:
       - projet5_network
 
-volumes:
+volumes: #volume persistant pour données MongoDB
   projet_5_mongo_data:  # Définition du volume Docker nommé projet_5_mongo_data pour la persistance des données MongoDB, reference dans services.mongo.volumes
 
 networks:

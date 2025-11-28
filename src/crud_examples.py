@@ -32,7 +32,7 @@ new_patient = {
 # Insertion du document dans la collection
 insert_result = collection.insert_one(new_patient)
 # MongoDB crée automatiquement un _id unique pour ce document si on ne l'a pas précisé
-# inserted_id permet de récupérer cet ID dans Python
+# inserted_id permet de récupérer cet ID dans Python, crée automatiquement par MongoDB
 print(f"Inserted ID : {insert_result.inserted_id}")
 
 #           READ          
@@ -59,4 +59,4 @@ print("\nDELETE")
 collection.delete_one({"Name": "John TEST"})
 # Vérification que le document a été supprimé
 deleted = collection.find_one({"Name": "John TEST"})
-print("After delete :", deleted)
+print("After delete :", deleted) # affiche None car le document a été supprimé
