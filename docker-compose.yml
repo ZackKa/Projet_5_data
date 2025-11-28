@@ -23,6 +23,7 @@ services:   # définition des services Docker, c'est-à-dire les conteneurs à l
       - projet5_network
 
   migration:  # Définition du service qui fait la migration/import des données
+  
     build:    #image personnalisée pour la migration
       context: .  # Le chemin du projet Docker pour construire l'image
       dockerfile: Dockerfile.migration  # Dockerfile spécifique pour la migration
@@ -40,6 +41,24 @@ services:   # définition des services Docker, c'est-à-dire les conteneurs à l
     # Le CMD du Dockerfile lance automatiquement la migration puis termine le conteneur
     networks:
       - projet5_network
+
+  migration_test:
+    build:
+      context: .
+      dockerfile: Dockerfile.migration
+    container_name: proj5_migration_test
+    depends_on:
+      - mongo
+    environment:
+      MONGO_USERNAME: ${MONGO_USER_ADMIN} # Nom d'utilisateur pour la connexion à MongoDB
+      MONGO_PASSWORD: ${MONGO_USER_ADMIN_PWD} # Mot de passe pour la connexion à MongoDB
+    volumes:
+      - ./src:/app/src:ro # Monte le dossier source dans le conteneur en lecture seule (:ro)
+      - ./test:/app/test:ro # Monte le dossier test dans le conteneur en lecture seule (:ro)
+      - ./data:/data:ro # Monte le dossier data dans le conteneur en lecture seule (:ro)
+    networks:
+      - projet5_network
+    command: ["tail", "-f", "/dev/null"]  # permet au conteneur de rester actif
 
 volumes: #volume persistant pour données MongoDB
   projet_5_mongo_data:  # Définition du volume Docker nommé projet_5_mongo_data pour la persistance des données MongoDB, reference dans services.mongo.volumes
