@@ -445,6 +445,82 @@ docker exec -it proj5_mongo mongosh -u {MONGO_USER} -p {MONGO_PWD} --authenticat
 !!! Remplacer {MONGO_USER} et {MONGO_PWD} par l'identifiant et le mot de passe
 
 
+##13. Tests unitaires (pytest)
+
+Le projet inclut une suite de tests unitaires permettant de vérifier :
+
+   - la bonne validation du dataset (validate_data)
+
+   - la création correcte des index MongoDB (create_indexes)
+
+Les tests utilisent :
+
+   - pytest comme framework
+
+   - un conteneur dédié “migration_test”
+
+   - une base MongoDB de test isolée : medical_db_test
+
+   - un utilisateur d’authentification en lecture/écriture, chargé automatiquement via les variables d’environnement définies dans .env ( MONGO_USERNAME et MONGO_PASSWORD )
+
+
+13.1 Contenu des tests
+
+Le fichier test/test_import.py effectue deux vérifications :
+
+      Test 1 — test_validate_data
+
+Vérifie que :
+
+   - le CSV est bien chargé,
+
+   - les données sont non vides,
+
+   - aucun doublon ne subsiste après validation.
+
+      Test 2 — test_create_indexes
+
+Vérifie que :
+
+   - la connexion MongoDB fonctionne via l’utilisateur RW,
+
+   - un document test peut être inséré,
+
+   - les index suivants sont correctements créés :
+
+      - Name
+
+      - Medical Condition
+
+      - Doctor
+
+      - Date of Admission
+
+Chaque test utilise une base isolée créée puis supprimée automatiquement : medical_db_test
+
+Cela garantit qu’aucune donnée du projet principal n’est altérée.
+
+
+##13.2 Exécution des tests
+
+Une fois les conteneurs Docker démarrés via :
+```bash
+docker-compose up -d --build
+```
+
+Lancer les tests avec la commande :
+```bash
+docker exec -it proj5_migration_test env PYTHONPATH=/app pytest /app/test -v
+```
+
+Explication :
+
+- proj5_migration_test est le nom du conteneur exécutant Python et les scripts.
+
+- PYTHONPATH=/app permet d’importer correctement les modules du dossier src/.
+
+- pytest /app/test -v lance les tests avec affichage détaillé.
+
 
 ## Conclusion – Étape 2 : Migration via Docker
 
