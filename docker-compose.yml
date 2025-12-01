@@ -42,23 +42,23 @@ services:   # définition des services Docker, c'est-à-dire les conteneurs à l
     networks:
       - projet5_network
 
-  migration_test:
-    build:
-      context: .
-      dockerfile: Dockerfile.migration
-    container_name: proj5_migration_test
+  migration_test: # Définition du service pour exécuter les tests de migration/import
+    build: # Création d'une image Docker personnalisée
+      context: . # Le chemin du projet Docker pour construire l'image
+      dockerfile: Dockerfile.migration # même Dockerfile que pour la migration
+    container_name: proj5_migration_test # Nom du conteneur de test
     depends_on:
-      - mongo
-    environment:
-      MONGO_USERNAME: ${MONGO_USER_ADMIN} # Nom d'utilisateur pour la connexion à MongoDB
-      MONGO_PASSWORD: ${MONGO_USER_ADMIN_PWD} # Mot de passe pour la connexion à MongoDB
+      - mongo # Indique que ce conteneur doit attendre que mongo soit démarré avant lui
+    environment: # Variables pour se connecter à MongoDB depuis le conteneur de test
+      MONGO_USERNAME: ${MONGO_USER_ADMIN} # Nom d'utilisateur admin pour la connexion à MongoDB
+      MONGO_PASSWORD: ${MONGO_USER_ADMIN_PWD} # Mot de passe admin pour la connexion à MongoDB
     volumes:
       - ./src:/app/src:ro # Monte le dossier source dans le conteneur en lecture seule (:ro)
       - ./test:/app/test:ro # Monte le dossier test dans le conteneur en lecture seule (:ro)
       - ./data:/data:ro # Monte le dossier data dans le conteneur en lecture seule (:ro)
     networks:
-      - projet5_network
-    command: ["tail", "-f", "/dev/null"]  # permet au conteneur de rester actif
+      - projet5_network # Indique que le conteneur de test doit utiliser le même réseau que le conteneur mongo
+    command: ["tail", "-f", "/dev/null"]  # permet au conteneur de rester actif pour les tests
 
 volumes: #volume persistant pour données MongoDB
   projet_5_mongo_data:  # Définition du volume Docker nommé projet_5_mongo_data pour la persistance des données MongoDB, reference dans services.mongo.volumes
